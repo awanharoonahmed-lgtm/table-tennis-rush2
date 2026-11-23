@@ -1,0 +1,6 @@
+{
+  "appId": "com.tabletennisrush.game",
+  "appName": "TABLE TENNIS RUSH",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
