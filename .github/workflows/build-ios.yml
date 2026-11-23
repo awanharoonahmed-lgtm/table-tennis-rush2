@@ -1,0 +1,63 @@
+
+name: Build iOS App
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Capacitor Assets
+        run: npm install --no-save @capacitor/assets
+
+      - name: Build web game
+        run: npm run build
+
+      - name: Add iOS platform
+        run: npx cap add ios
+
+      - name: Generate iOS app icon
+        run: npx capacitor-assets generate --ios
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+
+      - name: Build iOS app
+        run: |
+          cd ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -R ios/App/build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -r TABLE-TENNIS-RUSH.ipa Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TABLE-TENNIS-RUSH-iOS
+          path: TABLE-TENNIS-RUSH.ipa
+          if-no-files-found: error
